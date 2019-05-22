@@ -1,0 +1,138 @@
+#Commands in exercising MongoDB
+#All provided by Prof. Yongjun Zhu, SKKU
+
+
+// Create 
+db.createCollection("movies")
+movie = {"title" : "Star Wars: Episode IV - A New Hope", "director" : "George Lucas", "year" : 1977}
+db.movies.insertOne(movie)
+
+// Read
+db.movies.find()
+db.movies.findOne()
+
+// Update
+db.movies.updateOne({"title" : "Star Wars: Episode IV - A New Hope"}, {$set : {reviews: []}})
+
+// Delete
+db.movies.deleteOne({"title" : "Star Wars: Episode IV - A New Hope"})
+
+
+// Insert Many
+db.movies.insertOne({"title" : "Stand by Me"})
+db.movies.insertMany([{"title" : "Ghostbusters"}, {"title" : "E.T."}, {"title" : "Blade Runner"}]);
+
+// Insert Many (ordered)
+db.movies.deleteMany({})
+db.movies.insertMany([
+    {"_id" : 0, "title" : "Top Gun", "year" : 1986},
+    {"_id" : 1, "title" : "Back to the Future", "year" : 1985},
+    {"_id" : 1, "title" : "Gremlins", "year" : 1984},
+    {"_id" : 2, "title" : "Aliens", "year" : 1986}])
+
+db.movies.insertMany([
+	{"_id" : 3, "title" : "Sixteen Candles", "year" : 1984},
+ 	{"_id" : 4, "title" : "The Terminator", "year" : 1984},
+ 	{"_id" : 4, "title" : "The Princess Bride", "year" : 1987},
+ 	{"_id" : 5, "title" : "Scarface", "year" : 1983}],
+ 	{"ordered" : false})
+
+
+// Delete
+db.movies.insertOne({"_id" : 2, "title" : "Gremlins", "year" : 1984})
+db.movies.deleteOne({"year" : 1984})
+db.movies.deleteMany({"year" : 1984})
+
+
+// Delete all
+db.movies.deleteMany({})
+db.movies.drop()
+
+
+// Replace
+db.createCollection("people")
+db.people.insertOne({"name" : "joe", "friends" : 32, "enemies" : 2})
+var joe = db.people.findOne({"name" : "joe"})
+joe.relationships = {"friends" : joe.friends, "enemies" : joe.enemies}
+delete joe.friends
+delete joe.enemies
+db.people.replaceOne({"name" : "joe"}, joe)
+
+
+// Update
+db.people.insertOne({"name" : "john", "age" : 30, "gender" : "male", "location" : "Wisconsin"})
+db.people.updateOne({"name" : "john"}, {"$set" : {"favorite book" : "War and Peace"}})
+db.people.find({"name" : "john"})
+db.people.updateOne({"name" : "john"}, {"$set" : {"favorite book" : "Green Eggs and Ham"}})
+db.people.updateOne({"name" : "john"}, {"$set" : {"favorite book" : ["Cat's Cradle", "Foundation Trilogy", "Ender's Game"]}})
+db.people.updateOne({"name" : "john"}, {"$unset" : {"favorite book" : 1}})
+ 
+// Update (embedded documents) 
+db.createCollection("blog.posts")
+db.blog.posts.insertOne({"title" : "A blog post", "content" : "...", "author" : {"name" : "joe", "email" : "joe@example.com"}})
+db.blog.posts.updateOne({"author.name" : "joe"}, {"$set" : {"author.name" : "joe smith"}})
+db.blog.posts.find()
+
+// Update ($inc))
+db.createCollection("games")
+db.games.insertOne({"game" : "pinball", "user" : "joe"}) 
+/@ $inc는 해당 data 없어도 가능
+db.games.updateOne({"game" : "pinball", "user" : "joe"}, {"$inc" : {"score" : 50}})
+db.games.updateOne({"game" : "pinball", "user" : "joe"}, {"$inc" : {"score" : 100}})
+db.games.updateOne({"game" : "pinball", "user" : "joe"}, {"$inc" : {"score" : -50}})
+db.games.find()
+
+// UpdateMany
+db.people.insertMany([{"birthday": "10/13/1978"}, {"birthday": "10/13/1978"}, {"birthday": "10/13/1978"}])
+db.people.updateMany({"birthday" : "10/13/1978"}, {"$set" : {"gift" : "Happy Birthday!"}})
+db.people.find()
+
+
+// Querying
+db.people.find({"name" : "joe"})
+db.people.find({"name" : "john", "age" : 30})
+db.people.find({"name" : "john"}, {"name" : 1, "age" : 1})
+/@return only name and age of var name john
+db.people.find({"name" : "john"}, {"_id" : 0, "age" : 0})
+
+// Querying (range queries)
+db.people.find({"age" : {"$gte" : 18, "$lte" : 30}})
+/@ find one between greater than equal(gte)
+@also possible for date var
+
+db.createCollection("users")
+db.users.insertMany([{"name" : "Joe", "registered" : new Date("09/29/2017")}, {"name" : "John", "registered" : new Date("09/01/2018")}, {"name" : "Sophia", "registered" : new Date("04/04/2017")}])
+x = new Date("12/31/2017")
+db.users.find({"registered": {"$lt": x}})
+
+// Querying (OR queries)
+db.users.find({"name" : {"$ne" : "Joe"}}) //not equal
+db.users.find({"name" : {"$in" : ["Joe", "John"]}}) 
+db.users.find({"name" : {"$nin" : ["Joe", "John"]}}) //not in
+db.users.find({"$or" : [{"name" : "Joe"}, {"name" : "John"}]})
+
+// Querying ($all $size)
+db.createCollection("food")
+db.food.insertOne({"_id" : 1, "fruit" : ["apple", "banana", "peach"]})
+db.food.insertOne({"_id" : 2, "fruit" : ["apple", "pear", "orange"]})
+db.food.insertOne({"_id" : 3, "fruit" : ["cherry", "banana", "apple"]})
+db.food.find({"fruit" : {$all : ["apple", "banana"]}})
+db.food.find({"fruit" : ["apple", "banana"]})
+db.food.find({"fruit" : ["banana", "apple", "peach"]})
+db.food.find({"fruit.2" : "peach"}) //specific address
+db.food.find({"fruit" : {"$size" : 3}})
+
+// Querying ($slice)
+db.food.findOne({"_id" : 1}, {"fruit" : {"$slice" : 1}})
+db.food.findOne({"_id" : 1}, {"fruit" : {"$slice" : -1}})
+db.food.findOne({"_id" : 1}, {"fruit" : {"$slice" : [0, 2]}}) //0에서 시작하여 2개
+
+// Querying (Embedded documents)
+db.people.deleteOne({"name": "joe"})
+db.people.insertOne({"name" : {"first" : "Joe", "last" : "Smith"}, "age" : 45})
+db.people.find({"name" : {"last" : "Smith", "first" : "Joe"}})
+db.people.find({"name" : {"first" : "Joe", "last" : "Smith"}})
+db.people.updateOne({"name.first" : "Joe"}, {"$set": {"name" : {"first" : "Joe", "last" : "Smith", "middle" : "John"}}})
+db.people.find({"name" : {"first" : "Joe", "last" : "Smith"}})
+db.people.find({"name.first" : "Joe", "name.last" : "Smith"})
+
