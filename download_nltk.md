@@ -3,7 +3,7 @@ ex) Error connecting to server: [SSL: CERTIFICATE_VERIFY_FAILED] certificate ver
 
 the codes below will solve this error, and success to download nltk.<br>
 
-<code>
+<pre>
 import nltk
 import ssl
 
